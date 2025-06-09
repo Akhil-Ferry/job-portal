@@ -59,16 +59,78 @@ exports.deleteJob = async (req, res) => {
 // Analytics for job statistics
 exports.analytics = async (req, res) => {
     try {
+        const { timeframe } = req.query;
+        let dateFilter = {};
+        
+        // Add date filtering based on timeframe
+        if (timeframe) {
+            const now = new Date();
+            if (timeframe === 'week') {
+                const lastWeek = new Date(now.setDate(now.getDate() - 7));
+                dateFilter = { createdAt: { $gte: lastWeek } };
+            } else if (timeframe === 'month') {
+                const lastMonth = new Date(now.setMonth(now.getMonth() - 1));
+                dateFilter = { createdAt: { $gte: lastMonth } };
+            } else if (timeframe === 'year') {
+                const lastYear = new Date(now.setFullYear(now.getFullYear() - 1));
+                dateFilter = { createdAt: { $gte: lastYear } };
+            }
+        }
+        
+        // Base query - include isActive for active jobs only
+        const baseQuery = { isActive: true, ...dateFilter };
+        
+        // Jobs per location
         const jobsPerLocation = await Job.aggregate([
-            { $group: { _id: "$location", count: { $sum: 1 } } }
+            { $match: baseQuery },
+            { $group: { _id: "$location", count: { $sum: 1 } } },
+            { $sort: { count: -1 } }
         ]);
+        
+        // In-demand skills
         const inDemandSkills = await Job.aggregate([
+            { $match: baseQuery },
             { $unwind: "$skills" },
             { $group: { _id: "$skills", count: { $sum: 1 } } },
             { $sort: { count: -1 } },
             { $limit: 10 }
         ]);
-        res.json({ jobsPerLocation, inDemandSkills });
+        
+        // Average salary by job title
+        const averageSalary = await Job.aggregate([
+            { $match: baseQuery },
+            { $group: { 
+                _id: "$title", 
+                avgMinSalary: { $avg: "$salary.min" },
+                avgMaxSalary: { $avg: "$salary.max" },
+                count: { $sum: 1 }
+            }},
+            { $sort: { count: -1 } },
+            { $limit: 5 }
+        ]);
+        
+        // Jobs posted over time (grouped by month)
+        const jobsOverTime = await Job.aggregate([
+            { $match: { isActive: true } },
+            { 
+                $group: {
+                    _id: { 
+                        year: { $year: "$createdAt" },
+                        month: { $month: "$createdAt" }
+                    },
+                    count: { $sum: 1 }
+                }
+            },
+            { $sort: { "_id.year": 1, "_id.month": 1 } },
+            { $limit: 12 }
+        ]);
+        
+        res.json({ 
+            jobsPerLocation, 
+            inDemandSkills, 
+            averageSalary,
+            jobsOverTime
+        });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }

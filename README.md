@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Job Portal System Using MongoDB
 
 ## Overview
@@ -74,3 +75,6 @@ Contributions are welcome! Please open an issue or submit a pull request for any
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
+=======
+# job-portal
+>>>>>>> e5818ddbd1016f02e4970f135dbf1ac5b5c65ea3

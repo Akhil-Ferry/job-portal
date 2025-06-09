@@ -1,20 +1,17 @@
 const express = require('express');
 const router = express.Router();
 const jobController = require('../controllers/jobController');
+const { authMiddleware, isEmployer } = require('../middlewares/authMiddleware');
 
-// Route to create a new job post
-router.post('/', jobController.createJob);
-
-// Route to get all job posts
+// Public routes
 router.get('/', jobController.getJobs);
 
-// Route to update a job post by ID
-router.put('/:id', jobController.updateJob);
+// Protected routes
+router.post('/', authMiddleware, isEmployer, jobController.createJob);
+router.put('/:id', authMiddleware, isEmployer, jobController.updateJob);
+router.delete('/:id', authMiddleware, isEmployer, jobController.deleteJob);
 
-// Route to delete a job post by ID
-router.delete('/:id', jobController.deleteJob);
-
-// Route to get job analytics summary
-router.get('/analytics/summary', jobController.analytics);
+// Analytics route
+router.get('/analytics', authMiddleware, jobController.analytics);
 
 module.exports = router;

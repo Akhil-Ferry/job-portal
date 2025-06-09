@@ -4,11 +4,11 @@ import './App.css';
 
 // Import pages
 import Home from './pages/Home';
+import Jobs from './pages/Jobs';
 import Login from './pages/Login';
 import Register from './pages/Register';
-import Jobs from './pages/Jobs';
-import Candidates from './pages/Candidates';
 import Profile from './pages/Profile';
+import Candidates from './pages/Candidates';
 
 // Import components
 import JobForm from './components/JobForm';
@@ -34,16 +34,7 @@ function App() {
     localStorage.removeItem('candidateId');
     setIsAuthenticated(false);
     setUserRole('');
-    window.location.href = '/';
   };
-
-  // Placeholder for home page
-  const HomePage = () => (
-    <div className="home">
-      <h1>Welcome to Job Portal System</h1>
-      <p>Find your dream job or the perfect candidate</p>
-    </div>
-  );
 
   return (
     <Router>
@@ -56,18 +47,27 @@ function App() {
             <ul>
               <li><Link to="/">Home</Link></li>
               <li><Link to="/jobs">Jobs</Link></li>
+              
               {isAuthenticated && userRole === 'employer' && (
                 <li><Link to="/post-job">Post Job</Link></li>
               )}
+              
+              {isAuthenticated && userRole === 'employer' && (
+                <li><Link to="/candidates">Candidates</Link></li>
+              )}
+              
               {isAuthenticated && userRole === 'candidate' && (
                 <li><Link to="/applications">My Applications</Link></li>
               )}
+              
               {isAuthenticated && (
                 <li><Link to="/profile">Profile</Link></li>
               )}
+              
               {isAuthenticated && (
                 <li><Link to="/analytics">Analytics</Link></li>
               )}
+              
               {!isAuthenticated ? (
                 <>
                   <li><Link to="/login">Login</Link></li>
@@ -79,23 +79,45 @@ function App() {
             </ul>
           </nav>
         </header>
-
+        
         <main className="app-main">
           <Switch>
-            <Route path="/" exact component={HomePage} />
+            <Route path="/" exact component={Home} />
             <Route path="/jobs" component={Jobs} />
-            <Route path="/login" render={() => isAuthenticated ? <Redirect to="/" /> : <Login setIsAuthenticated={setIsAuthenticated} setUserRole={setUserRole} />} />
-            <Route path="/register" render={() => isAuthenticated ? <Redirect to="/" /> : <Register />} />
+            <Route path="/login">
+              <Login setIsAuthenticated={setIsAuthenticated} setUserRole={setUserRole} />
+            </Route>
+            <Route path="/register" component={Register} />
             <Route path="/candidates" component={Candidates} />
-            <Route path="/post-job" render={() => isAuthenticated && userRole === 'employer' ? <JobForm onSubmit={() => window.location.href = '/jobs'} /> : <Redirect to="/login" />} />
-            <Route path="/applications" render={() => isAuthenticated && userRole === 'candidate' ? <ApplicationTracker /> : <Redirect to="/login" />} />
-            <Route path="/profile" render={() => isAuthenticated ? <Profile /> : <Redirect to="/login" />} />
-            <Route path="/analytics" render={() => isAuthenticated ? <AnalyticsDashboard /> : <Redirect to="/login" />} />
+            <Route path="/post-job">
+              {isAuthenticated && userRole === 'employer' ? 
+                <JobForm onSubmit={() => {}} /> : 
+                <Redirect to="/login" />
+              }
+            </Route>
+            <Route path="/applications">
+              {isAuthenticated && userRole === 'candidate' ? 
+                <ApplicationTracker /> : 
+                <Redirect to="/login" />
+              }
+            </Route>
+            <Route path="/profile">
+              {isAuthenticated ? 
+                <Profile /> : 
+                <Redirect to="/login" />
+              }
+            </Route>
+            <Route path="/analytics">
+              {isAuthenticated ? 
+                <AnalyticsDashboard /> : 
+                <Redirect to="/login" />
+              }
+            </Route>
           </Switch>
         </main>
-
+        
         <footer className="app-footer">
-          <p>&copy; 2023 Job Portal System. All rights reserved.</p>
+          
         </footer>
       </div>
     </Router>
