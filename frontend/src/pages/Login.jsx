@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useHistory } from 'react-router-dom';
 import { API_URL } from '../services/api';
+import axios from 'axios';
 
-const Login = () => {
+const Login = ({ setIsAuthenticated, setUserRole }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
@@ -13,27 +14,27 @@ const Login = () => {
         setError('');
 
         try {
-            const response = await fetch(`${API_URL}/auth/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password }),
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.message || 'Login failed');
-            localStorage.setItem('token', data.token);
-            // Store candidateId if user is a candidate
-            if (data.user && data.user.role === 'candidate') {
-                localStorage.setItem('candidateId', data.user.id);
+            const response = await axios.post(`${API_URL}/auth/login`, { email, password });
+            const { token, user } = response.data;
+            
+            localStorage.setItem('token', token);
+            localStorage.setItem('userRole', user.role);
+            
+            if (user.role === 'candidate') {
+                localStorage.setItem('candidateId', user._id);
             }
-            // Optionally, store employerId for employers
+            
+            setIsAuthenticated(true);
+            setUserRole(user.role);
             history.push('/');
         } catch (err) {
             setError('Invalid email or password');
+            console.error(err);
         }
     };
 
     return (
-        <div className="login-container">
+        <div className="login-page">
             <h2>Login</h2>
             {error && <p className="error">{error}</p>}
             <form onSubmit={handleLogin}>
